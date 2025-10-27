@@ -14,15 +14,6 @@ fn supported() -> bool {
     false
 }
 
-#[cfg(target_os = "android")]
-fn supported() -> bool {
-    panic!("debug!");
-    cc::Build::new()
-        .file("src/linux-musl.c")
-        .compile("linux-musl");
-    true
-}
-
 #[cfg(not(any(
     feature = "always-supported",
     feature = "always-fallback",
@@ -30,13 +21,22 @@ fn supported() -> bool {
 )))]
 fn supported() -> bool {
     use std::process::Command;
+    let target = std::env::var("TARGET").unwrap();
+
+    if target.contains("android") {
+        // For android, we assume syscall is available, but not wrapped.
+        // Running a test compile will not work most of the time (cross compile).
+        cc::Build::new()
+            .file("src/linux-musl.c")
+            .compile("linux-musl");
+        return true;
+    }
 
     let dir = tempfile::tempdir().unwrap();
     let test_c = dir.path().join("test.c");
 
     let compiler = cc::Build::new().cargo_metadata(false).get_compiler();
     let compiler_path = compiler.path();
-    let target = std::env::var("TARGET").unwrap();
 
     // It might be better to #include the relevant headers and check that the
     // argument types are as expected.
