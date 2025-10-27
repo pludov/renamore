@@ -16,6 +16,7 @@ fn supported() -> bool {
 
 #[cfg(target_os = "android")]
 fn supported() -> bool {
+    panic!("debug!");
     cc::Build::new()
         .file("src/linux-musl.c")
         .compile("linux-musl");
@@ -33,9 +34,7 @@ fn supported() -> bool {
     let dir = tempfile::tempdir().unwrap();
     let test_c = dir.path().join("test.c");
 
-    let compiler = cc::Build::new()
-        .cargo_metadata(false)
-        .get_compiler();
+    let compiler = cc::Build::new().cargo_metadata(false).get_compiler();
     let compiler_path = compiler.path();
     let target = std::env::var("TARGET").unwrap();
 
@@ -43,15 +42,18 @@ fn supported() -> bool {
     // argument types are as expected.
 
     if target.contains("linux") {
-        std::fs::write(&test_c, b"
+        std::fs::write(
+            &test_c,
+            b"
             void renameat2();
             void statfs();
 
             int main() {
                 renameat2();
                 statfs();
-            }"
-        ).unwrap();
+            }",
+        )
+        .unwrap();
 
         let status = Command::new(compiler_path)
             .current_dir(dir.path())
