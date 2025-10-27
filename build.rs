@@ -4,19 +4,28 @@ fn main() {
     }
 }
 
-#[cfg(feature = "always-supported")]
+#[cfg(all(feature = "always-supported", not(target_os = "android")))]
 fn supported() -> bool {
     true
 }
 
-#[cfg(feature = "always-fallback")]
+#[cfg(all(feature = "always-fallback", not(target_os = "android")))]
 fn supported() -> bool {
     false
+}
+
+#[cfg(target_os = "android")]
+fn supported() -> bool {
+    cc::Build::new()
+        .file("src/linux-musl.c")
+        .compile("linux-musl");
+    true
 }
 
 #[cfg(not(any(
     feature = "always-supported",
     feature = "always-fallback",
+    target_os = "android",
 )))]
 fn supported() -> bool {
     use std::process::Command;

@@ -176,9 +176,9 @@ fn rename_exclusive_non_atomic(from: &Path, to: &Path) -> Result<()> {
     std::fs::rename(from, to)
 }
 
-#[cfg(all(target_os = "linux", linker))]
+#[cfg(all(any(target_os = "linux", target_os = "android"), linker))]
 mod linux;
-#[cfg(all(target_os = "linux", linker))]
+#[cfg(all(any(target_os = "linux", target_os = "android"), linker))]
 use linux as sys;
 
 #[cfg(target_vendor = "apple")]
@@ -192,7 +192,7 @@ mod windows;
 use windows as sys;
 
 #[cfg(not(any(
-    all(target_os = "linux", linker),
+    all(any(target_os = "linux", target_os = "android"), linker),
     target_vendor = "apple",
     target_os = "windows",
 )))]
